@@ -1,0 +1,229 @@
+<polymer-element name="ceci-addform" attributes="resetonsubmit dataname datascope" dataname="Items" extends="ceci-element">
+  <template>
+    <link rel="stylesheet" href="component.css">
+    <!-- <div id="datascope"></div> -->
+    <div id="add-input-view" show="no">
+      <h2 on-click="{{toggleInputMenu}}">+ Add Inputs</h2>
+      <div on-click="{{addInputClick}}" class="input-types">
+        <div class="input-type" type="text">Text Input</div>
+        <div class="input-type" type="checkbox">Checkbox</div>
+        <div class="input-type" type="range">Slider</div>
+      </div>
+    </div>
+    <div id="form-wrapper" class="form"></div>
+    <shadow></shadow>
+    <script type="text/json" id="ceci-definition">
+      {
+        "broadcasts": {
+        },
+        "listeners": {
+          "saveData": {
+            "description": "Submit this form and saves the data a record.",
+            "label": "Submit Form"
+          },
+            "setScope": {
+              "description": "Specifies what record to save the data to.",
+              "label": "Set Save Scope"
+            }
+        },
+        "attributes": {
+          "dataname": {
+            "description": "This form will create this item, ie.. 'Cats'",
+            "label": "I create...",
+            "editable": "text"
+          },
+          "resetonsubmit": {
+            "description": "Clear the form fields after submitting",
+            "label": "Reset fields on submit",
+            "editable": "boolean"
+          }
+        }
+      }
+    </script>
+  </template>
+  <description>
+    Listens for a message and counts
+  </description>
+  <tags>starter,math</tags>
+  <thumbnail>
+      <img src="thumbnail.png" />
+  </thumbnail>
+    <script>
+      Polymer("ceci-addform", {
+        ready: function(){
+          this.super();
+          this.datascope = [];
+        },
+        toggleInputMenu: function(){
+          //Toggles the menu at the top of the form used for adding iputs
+          var menu = this.shadowRoot.querySelector("#add-input-view");
+          var state = menu.getAttribute("show");
+          if(state == "yes") {
+            menu.setAttribute("show","no");
+          } else {
+            menu.setAttribute("show","yes");
+          }
+        },
+        setScope : function(e){
+          this.datascope = e;
+        },
+        datascopeChanged : function(){
+          //If we want some indicator on the form for where the data is being added to, this is where we'd do it.
+          // var scopeEl = this.shadowRoot.querySelector("#datascope");
+        },
+        addInputClick : function(e){
+          var type = e.target.getAttribute("type");
+          var inputName = window.prompt("Name this input");
+          if(inputName){
+            this.addInput(type,inputName);
+          }
+        },
+        datanameChanged : function(){
+          this.updateSchema();
+        },
+        resetForm: function(){
+          var fields = this.shadowRoot.querySelectorAll(".form input");
+          for (var field in fields) {
+            if (fields.hasOwnProperty(field)) {
+              var f = fields[field];
+              f.value = "";
+            }
+          }
+        },
+        addInput: function(type,inputName){
+          var self = this;
+
+          var wrapper = document.createElement("div");
+          wrapper.classList.add("input-wrapper");
+
+          var input = document.createElement("input");
+          input.setAttribute("type",type);
+          input.setAttribute("storeName",inputName);
+
+          var label = document.createElement("label");
+
+          var deleteLink = document.createElement("div");
+          deleteLink.innerHTML = "X";
+          deleteLink.classList.add("delete-item");
+          deleteLink.setAttribute("on-click","{{deleteMe}}");
+          deleteLink.addEventListener("click",function(e){
+            self.deleteItem(e);
+          });
+
+          wrapper.appendChild(deleteLink);
+
+          if(type=="checkbox"){
+            var labelWrapper = document.createElement("span");
+            labelWrapper.innerHTML = inputName;
+            label.appendChild(input);
+            label.appendChild(labelWrapper);
+            wrapper.appendChild(label);
+          } else {
+            label.innerHTML = inputName;
+            wrapper.appendChild(label);
+            wrapper.appendChild(input);
+          }
+
+          this.shadowRoot.querySelector("#form-wrapper").appendChild(wrapper);
+          this.updateSchema();
+        },
+        enteredView : function(){
+          this.buildForm();
+          var formWrapper = this.shadowRoot.querySelector("#form-wrapper");
+          this.super();
+        },
+        deleteItem : function(e){
+          var item = e.target.parentNode;
+          item.parentNode.removeChild(item);
+          this.updateSchema();
+        },
+        buildForm: function(){
+          //Builds out the remembered form fields
+          var db = JSON.parse(localStorage.getItem("db")) || {};
+          var fields = db[this.dataname + "_formschema"] || [];
+          for (var index in fields) {
+            if (fields.hasOwnProperty(index)) {
+              var field = fields[index];
+              this.addInput(field["type"],field["name"]);
+            }
+          }
+        },
+        updateSchema : function(){
+          //Check what inputs there are, and build a schema file of them,
+          // so that when the component loads next time, it builds out hte correct form
+
+          var schema = [];
+
+          //Builds a schema file based on the fields in the form,
+          // should be triggered on load and on add / remove of fields
+          var fields = this.shadowRoot.querySelectorAll(".form input");
+          for (var field in fields) {
+            if (fields.hasOwnProperty(field)) {
+              var fieldSchema = {}
+              var f = fields[field];
+              var name = f.getAttribute("storeName");
+              var type = f.getAttribute("type");
+              fieldSchema["name"] = name;
+              fieldSchema["type"] = type;
+              schema.push(fieldSchema);
+            }
+          }
+
+          // Builds new schema
+          var keyname = this.dataname + "_formschema";
+
+          var db = JSON.parse(localStorage.getItem("db")) || {};
+
+          db[keyname] = schema;
+          localStorage.setItem("db", JSON.stringify(db));
+
+          // Event! So that data view components know when the schema has changed.
+          // Right now the schema depends only on the form inputs?
+          var event = new CustomEvent("formChange");
+          window.dispatchEvent(event);
+
+        },
+        saveData : function(){
+
+          var db = JSON.parse(localStorage.getItem("db")) || {};
+          var addTo = db;
+
+          for (var i = 0; i < this.datascope.length; i++){
+            var scopeItem = this.datascope[i];
+            addTo = addTo[scopeItem["dataset"]][scopeItem["index"]];
+          }
+
+          if (addTo[this.dataname] === undefined){
+            addTo[this.dataname] = [];
+          }
+
+          var newData = {};
+          var fields = this.shadowRoot.querySelectorAll(".form input");
+
+          for (var field in fields) {
+            if (fields.hasOwnProperty(field)) {
+              var f = fields[field];
+              var name = f.getAttribute("storeName");
+              if(f.getAttribute("type") == "checkbox"){
+                var value = f.checked;
+              } else {
+                var value = f.value;
+              }
+              newData[name] = value;
+            }
+          }
+
+          addTo[this.dataname].push(newData);
+
+          if(this.resetonsubmit == "true"){
+            this.resetForm();
+          }
+
+          localStorage.setItem("db",JSON.stringify(db));
+          //Stoage event!
+          var event = new CustomEvent("storage");
+          window.dispatchEvent(event);
+        }
+      });
+    </script>
+</polymer-element>

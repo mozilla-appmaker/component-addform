@@ -1,0 +1,130 @@
+:host {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  background: #EFEFEF;
+  padding: 10px;
+}
+
+:host h1 {
+  font-size: 18px;
+  border-bottom: solid 2px #CCC;
+  margin-bottom: 10px;
+  padding-bottom: 4px;
+  text-shadow: 0px 1px 0px white;
+}
+
+:host input {
+  padding: 5px 3px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+:host input[type=text]{
+  width: 90%
+}
+
+:host input[type=checkbox]{
+  margin-right: 5px;
+}
+
+:host label {
+  display: block;
+}
+
+:host p {
+  color: white;
+  background: green;
+  cursor: pointer;
+  padding: 5px 10px;
+  display: inline-block;
+}
+
+:host .input-wrapper {
+  position: relative;
+  margin-bottom: 5px;
+}
+
+:host input[type=checkbox] {
+  margin: 0px;
+}
+
+:host .input-wrapper .delete-item {
+  display: inline-block;
+  background: #BBB;
+  -webkit-border-radius: 15px;
+  color: white;
+  cursor: pointer;
+  padding: 3px 7px;
+  float: right;
+  position: absolute;
+  top: calc(50% - 15px);
+  right: 0px;
+}
+
+:host .button {
+  background: green;
+  text-align: center;
+  padding: 5px 10px;
+  color: white;
+  cursor: pointer;
+  margin: 4px 0;
+}
+
+:host #add-input-view {
+  background: #DDD;
+  border-bottom: solid 1px #BBB;
+  padding: 5px;
+  padding: 10px;
+  -webkit-border-radius: 5px;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+:host #add-input-view h2 {
+  cursor: pointer;
+}
+
+:host #add-input-view h2 {
+  font-size: 15px;
+  margin-bottom: 10px;
+  font-weight: normal;
+  color: #777;
+  line-height: 15px;
+}
+
+:host #add-input-view[show=no] h2 {
+  margin-bottom: 0;
+}
+
+:host #add-input-view[show=no] .input-type {
+  display: none;
+}
+
+:host .input-type {
+  background: #CCC;
+  padding: 5px 10px;
+  cursor: pointer;
+  text-align: center;
+  padding: 5px 10px;
+  background: #FFF;
+  -webkit-border-radius: 4px;
+  margin-bottom: 6px;
+}
+
+:host .input-type:last-child {
+  margin-bottom: 0px;
+}
+
+:host .input-types {
+  display: block;
+}
+
+:host #form-wrapper {
+  position: relative;
+}
+
+:host #datascope {
+  text-align: center;
+  padding-bottom: 5px;
+}
