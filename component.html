@@ -1,4 +1,4 @@
-<polymer-element name="ceci-addform" attributes="resetonsubmit dataname datascope" dataname="Items" extends="ceci-element">
+<polymer-element name="ceci-addform-firebase" attributes="resetonsubmit dataname datascope" dataname="Items" extends="ceci-element">
   <template>
     <link rel="stylesheet" href="component.css">
     <!-- <div id="datascope"></div> -->
@@ -49,7 +49,7 @@
       <img src="thumbnail.png" />
   </thumbnail>
     <script>
-      Polymer("ceci-addform", {
+      Polymer("ceci-addform-firebase", {
         ready: function(){
           this.super();
           this.datascope = [];
@@ -140,6 +140,7 @@
         buildForm: function(){
           //Builds out the remembered form fields
           var db = JSON.parse(localStorage.getItem("db")) || {};
+
           var fields = db[this.dataname + "_formschema"] || [];
           for (var index in fields) {
             if (fields.hasOwnProperty(index)) {
@@ -219,10 +220,20 @@
             this.resetForm();
           }
 
-          localStorage.setItem("db",JSON.stringify(db));
+//          localStorage.setItem("db",JSON.stringify(db));
           //Stoage event!
           var event = new CustomEvent("storage");
           window.dispatchEvent(event);
+
+          var ceciapp = document.querySelector("ceci-app");
+          var firebase = ceciapp.getFirebase();
+
+
+
+            var formDataRef = firebase.child('form-data/' + this.dataname);
+            formDataRef.push(newData);
+
+
         }
       });
     </script>
