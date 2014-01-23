@@ -187,7 +187,7 @@
             db[keyname] = schema;
             //localStorage.setItem("db", JSON.stringify(db));
             var ca = document.querySelector("ceci-app")
-            ca.setFirebaseObject('form-data/' + self.dataname, db);
+            ca.setFirebaseObject('form-data/', db);
 
             // Event! So that data view components know when the schema has changed.
             // Right now the schema depends only on the form inputs?
@@ -199,8 +199,9 @@
 //          var db = JSON.parse(localStorage.getItem("db")) || {};
             var ca = document.querySelector("ceci-app");
             var self = this;
-            //ca.getFirebaseObject('form-data/' + this.dataname, function(data){
-                //var db = {};
+            //ca.getFirebaseObject('form-data/' + this.dataname, function(data)
+            // var db = {};
+
                 //var addTo = db;
 
                 var addTo = {};
