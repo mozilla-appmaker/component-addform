@@ -142,7 +142,7 @@
           var self = this;
           //var db = JSON.parse(localStorage.getItem("db")) || {};
           var ca = document.querySelector("ceci-app");
-          ca.getFirebaseObject('form-data',this.dataname, function(data){
+          ca.getFirebaseObject('form-data',"", function(data){
               var db = data || {};
               console.log("db")
               console.log(db)
