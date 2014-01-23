@@ -139,15 +139,19 @@
         },
         buildForm: function(){
           //Builds out the remembered form fields
-          var db = JSON.parse(localStorage.getItem("db")) || {};
-
-          var fields = db[this.dataname + "_formschema"] || [];
-          for (var index in fields) {
-            if (fields.hasOwnProperty(index)) {
-              var field = fields[index];
-              this.addInput(field["type"],field["name"]);
-            }
-          }
+          var self = this;
+          //var db = JSON.parse(localStorage.getItem("db")) || {};
+          var ca = document.querySelector("ceci-app");
+          ca.getFirebaseObject('form-data/' + this.dataname, function(data){
+              var db = data;
+              var fields = db[self.dataname + "_formschema"] || [];
+              for (var index in fields) {
+                  if (fields.hasOwnProperty(index)) {
+                      var field = fields[index];
+                      self.addInput(field["type"],field["name"]);
+                  }
+              }
+          });
         },
         updateSchema : function(){
           //Check what inputs there are, and build a schema file of them,
@@ -173,67 +177,69 @@
           // Builds new schema
           var keyname = this.dataname + "_formschema";
 
-          var db = JSON.parse(localStorage.getItem("db")) || {};
+          //var db = JSON.parse(localStorage.getItem("db")) || {};
+          var ca = document.querySelector("ceci-app")
+          ca.getFirebaseObject('form-data/' + this.dataname, function(data){
+            var db = data;
+            db[keyname] = schema;
+            //localStorage.setItem("db", JSON.stringify(db));
+            var ca = document.querySelector("ceci-app")
+            ca.setFirebaseObject('form-data/' + this.dataname, db);
 
-          db[keyname] = schema;
-          localStorage.setItem("db", JSON.stringify(db));
-
-          // Event! So that data view components know when the schema has changed.
-          // Right now the schema depends only on the form inputs?
-          var event = new CustomEvent("formChange");
-          window.dispatchEvent(event);
-
+            // Event! So that data view components know when the schema has changed.
+            // Right now the schema depends only on the form inputs?
+            var event = new CustomEvent("formChange");
+            window.dispatchEvent(event);
+          });
         },
         saveData : function(){
+//          var db = JSON.parse(localStorage.getItem("db")) || {};
+            var ca = document.querySelector("ceci-app");
+            ca.getFirebaseObject('form-data/' + this.dataname, function(data){
+                var db = data;
+                var addTo = db;
 
-          var db = JSON.parse(localStorage.getItem("db")) || {};
-          var addTo = db;
+                var addTo = {};
 
-          for (var i = 0; i < this.datascope.length; i++){
-            var scopeItem = this.datascope[i];
-            addTo = addTo[scopeItem["dataset"]][scopeItem["index"]];
-          }
+                for (var i = 0; i < this.datascope.length; i++){
+                    var scopeItem = this.datascope[i];
+                    addTo = addTo[scopeItem["dataset"]][scopeItem["index"]];
+                }
 
-          if (addTo[this.dataname] === undefined){
-            addTo[this.dataname] = [];
-          }
+                if (addTo[this.dataname] === undefined){
+                    addTo[this.dataname] = [];
+                }
 
-          var newData = {};
-          var fields = this.shadowRoot.querySelectorAll(".form input");
+                var newData = {};
+                var fields = this.shadowRoot.querySelectorAll(".form input");
 
-          for (var field in fields) {
-            if (fields.hasOwnProperty(field)) {
-              var f = fields[field];
-              var name = f.getAttribute("storeName");
-              if(f.getAttribute("type") == "checkbox"){
-                var value = f.checked;
-              } else {
-                var value = f.value;
-              }
-              newData[name] = value;
-            }
-          }
+                for (var field in fields) {
+                    if (fields.hasOwnProperty(field)) {
+                        var f = fields[field];
+                        var name = f.getAttribute("storeName");
+                        if(f.getAttribute("type") == "checkbox"){
+                            var value = f.checked;
+                        } else {
+                            var value = f.value;
+                        }
+                        newData[name] = value;
+                    }
+                }
 
-          addTo[this.dataname].push(newData);
+                addTo[this.dataname].push(newData);
 
-          if(this.resetonsubmit == "true"){
-            this.resetForm();
-          }
+                if(this.resetonsubmit == "true"){
+                    this.resetForm();
+                }
 
-//          localStorage.setItem("db",JSON.stringify(db));
-          //Stoage event!
-          var event = new CustomEvent("storage");
-          window.dispatchEvent(event);
+                //localStorage.setItem("db",JSON.stringify(db));
+                var ca = document.querySelector("ceci-app")
+                ca.setFirebaseObject('form-data/' + this.dataname, db);
+                //Stoage event!
+                var event = new CustomEvent("storage");
+                window.dispatchEvent(event);
 
-          var ceciapp = document.querySelector("ceci-app");
-          var firebase = ceciapp.getFirebase();
-
-
-
-            var formDataRef = firebase.child('form-data/' + this.dataname);
-            formDataRef.push(newData);
-
-
+            });
         }
       });
     </script>
