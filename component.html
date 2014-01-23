@@ -142,8 +142,10 @@
           var self = this;
           //var db = JSON.parse(localStorage.getItem("db")) || {};
           var ca = document.querySelector("ceci-app");
-          ca.getFirebaseObject('form-data/' + this.dataname, function(data){
-              var db = data;
+          ca.getFirebaseObject('form-data',this.dataname, function(data){
+              var db = data || {};
+              console.log("db")
+              console.log(db)
               var fields = db[self.dataname + "_formschema"] || [];
               for (var index in fields) {
                   if (fields.hasOwnProperty(index)) {
@@ -179,12 +181,13 @@
 
           //var db = JSON.parse(localStorage.getItem("db")) || {};
           var ca = document.querySelector("ceci-app")
-          ca.getFirebaseObject('form-data/' + this.dataname, function(data){
-            var db = data;
+          var self = this;
+          ca.getFirebaseObject('form-data',this.dataname, function(data){
+            var db = data || {};
             db[keyname] = schema;
             //localStorage.setItem("db", JSON.stringify(db));
             var ca = document.querySelector("ceci-app")
-            ca.setFirebaseObject('form-data/' + this.dataname, db);
+            ca.setFirebaseObject('form-data/' + self.dataname, db);
 
             // Event! So that data view components know when the schema has changed.
             // Right now the schema depends only on the form inputs?
@@ -195,23 +198,24 @@
         saveData : function(){
 //          var db = JSON.parse(localStorage.getItem("db")) || {};
             var ca = document.querySelector("ceci-app");
-            ca.getFirebaseObject('form-data/' + this.dataname, function(data){
-                var db = data;
-                var addTo = db;
+            var self = this;
+            //ca.getFirebaseObject('form-data/' + this.dataname, function(data){
+                //var db = {};
+                //var addTo = db;
 
                 var addTo = {};
 
-                for (var i = 0; i < this.datascope.length; i++){
-                    var scopeItem = this.datascope[i];
+                for (var i = 0; i < self.datascope.length; i++){
+                    var scopeItem = self.datascope[i];
                     addTo = addTo[scopeItem["dataset"]][scopeItem["index"]];
                 }
 
-                if (addTo[this.dataname] === undefined){
-                    addTo[this.dataname] = [];
+                if (addTo[self.dataname] === undefined){
+                    addTo[self.dataname] = [];
                 }
 
                 var newData = {};
-                var fields = this.shadowRoot.querySelectorAll(".form input");
+                var fields = self.shadowRoot.querySelectorAll(".form input");
 
                 for (var field in fields) {
                     if (fields.hasOwnProperty(field)) {
@@ -226,20 +230,20 @@
                     }
                 }
 
-                addTo[this.dataname].push(newData);
+                addTo[self.dataname].push(newData);
 
-                if(this.resetonsubmit == "true"){
-                    this.resetForm();
+                if(self.resetonsubmit == "true"){
+                    self.resetForm();
                 }
 
                 //localStorage.setItem("db",JSON.stringify(db));
                 var ca = document.querySelector("ceci-app")
-                ca.setFirebaseObject('form-data/' + this.dataname, db);
+                ca.setFirebaseObject('form-data/' + self.dataname, addTo);
                 //Stoage event!
                 var event = new CustomEvent("storage");
                 window.dispatchEvent(event);
 
-            });
+            //});
         }
       });
     </script>
