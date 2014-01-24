@@ -21,10 +21,10 @@
             "description": "Submit this form and saves the data a record.",
             "label": "Submit Form"
           },
-            "setScope": {
-              "description": "Specifies what record to save the data to.",
-              "label": "Set Save Scope"
-            }
+          "setScope": {
+            "description": "Specifies what record to save the data to.",
+            "label": "Set Save Scope"
+          }
         },
         "attributes": {
           "dataname": {
@@ -46,7 +46,7 @@
   </description>
   <tags>starter,math</tags>
   <thumbnail>
-      <img src="thumbnail.png" />
+    <img src="thumbnail.png" />
   </thumbnail>
     <script>
       Polymer("ceci-addform-firebase", {
@@ -94,40 +94,40 @@
           }
         },
         _addInputInit: function(type,inputName){
-            console.log("addInputInit")
-            var self = this;
+          console.log("addInputInit")
+          var self = this;
 
-            var wrapper = document.createElement("div");
-            wrapper.classList.add("input-wrapper");
+          var wrapper = document.createElement("div");
+          wrapper.classList.add("input-wrapper");
 
-            var input = document.createElement("input");
-            input.setAttribute("type",type);
-            input.setAttribute("storeName",inputName);
+          var input = document.createElement("input");
+          input.setAttribute("type",type);
+          input.setAttribute("storeName",inputName);
 
-            var label = document.createElement("label");
+          var label = document.createElement("label");
 
-            var deleteLink = document.createElement("div");
-            deleteLink.innerHTML = "X";
-            deleteLink.classList.add("delete-item");
-            deleteLink.setAttribute("on-click","{{deleteMe}}");
-            deleteLink.addEventListener("click",function(e){
-                self.deleteItem(e);
-            });
+          var deleteLink = document.createElement("div");
+          deleteLink.innerHTML = "X";
+          deleteLink.classList.add("delete-item");
+          deleteLink.setAttribute("on-click","{{deleteMe}}");
+          deleteLink.addEventListener("click",function(e){
+              self.deleteItem(e);
+          });
 
-            wrapper.appendChild(deleteLink);
+          wrapper.appendChild(deleteLink);
 
-            if(type=="checkbox"){
-                var labelWrapper = document.createElement("span");
-                labelWrapper.innerHTML = inputName;
-                label.appendChild(input);
-                label.appendChild(labelWrapper);
-                wrapper.appendChild(label);
-            } else {
-                label.innerHTML = inputName;
-                wrapper.appendChild(label);
-                wrapper.appendChild(input);
-            }
-            this.shadowRoot.querySelector("#form-wrapper").appendChild(wrapper);
+          if(type=="checkbox"){
+              var labelWrapper = document.createElement("span");
+              labelWrapper.innerHTML = inputName;
+              label.appendChild(input);
+              label.appendChild(labelWrapper);
+              wrapper.appendChild(label);
+          } else {
+              label.innerHTML = inputName;
+              wrapper.appendChild(label);
+              wrapper.appendChild(input);
+          }
+          this.shadowRoot.querySelector("#form-wrapper").appendChild(wrapper);
         },
         addInput: function(type,inputName){
           this._addInputInit(type,inputName);
@@ -150,7 +150,7 @@
           var self = this;
 
           this._checkFirebase(function(ceciApp){
-              ceciApp.getFirebaseObject('form-data',"", function(data){
+            ceciApp.getFirebaseObject('form-data',"", function(data){
               var db = data || {};
               console.log(db)
 
@@ -222,7 +222,6 @@
           }
         },
         saveData : function(){
-//          var db = JSON.parse(localStorage.getItem("db")) || {};
           var self = this;
           this._checkFirebase(function(ca){
             var that = self;
