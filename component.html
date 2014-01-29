@@ -14,6 +14,8 @@
     <shadow></shadow>
     <script type="text/json" id="ceci-definition">
       {
+        "thumbnail": "./thumbnail.png",
+        "description": "Create forms and save data to a database.",
         "broadcasts": {
         },
         "listeners": {
@@ -42,14 +44,14 @@
     </script>
   </template>
   <description>
-    Listens for a message and counts
+    Create forms and save the data to a database.
   </description>
-  <tags>starter,math</tags>
+  <tags>data</tags>
   <thumbnail>
     <img src="thumbnail.png" />
   </thumbnail>
     <script>
-      Polymer("ceci-addform-firebase", {
+      Polymer("ceci-addform", {
         ready: function(){
           this.super();
           this.datascope = [];
