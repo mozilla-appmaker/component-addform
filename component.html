@@ -14,6 +14,8 @@
     <shadow></shadow>
     <script type="text/json" id="ceci-definition">
       {
+        "thumbnail": "./thumbnail.png",
+        "description": "Create forms and save data to a database.",
         "broadcasts": {
         },
         "listeners": {
@@ -42,14 +44,14 @@
     </script>
   </template>
   <description>
-    Listens for a message and counts
+    Create forms and save the data to a database.
   </description>
-  <tags>starter,math</tags>
+  <tags>data</tags>
   <thumbnail>
     <img src="thumbnail.png" />
   </thumbnail>
     <script>
-      Polymer("ceci-addform-firebase", {
+      Polymer("ceci-addform", {
         ready: function(){
           this.super();
           this.datascope = [];
@@ -73,7 +75,6 @@
           // var scopeEl = this.shadowRoot.querySelector("#datascope");
         },
         addInputClick : function(e){
-          console.log("addInputClick")
           var type = e.target.getAttribute("type");
           var inputName = window.prompt("Name this input");
           if(inputName){
@@ -81,7 +82,6 @@
           }
         },
         datanameChanged : function(){
-          console.log("dataname changed");
           this.updateSchema();
         },
         resetForm: function(){
@@ -94,7 +94,6 @@
           }
         },
         _addInputInit: function(type,inputName){
-          console.log("addInputInit")
           var self = this;
 
           var wrapper = document.createElement("div");
@@ -134,7 +133,6 @@
           this.updateSchema();
         },
         enteredView : function(){
-          console.log("enteredView")
           var formWrapper = this.shadowRoot.querySelector("#form-wrapper");
           this.super();
         },
@@ -146,13 +144,11 @@
         },
         buildForm: function(){
           //Builds out the remembered form fields
-          console.log("buildForm")
           var self = this;
 
           this._checkFirebase(function(ceciApp){
             ceciApp.getFirebaseObject('form-data',"", function(data){
               var db = data || {};
-              console.log(db)
 
               var fields = db[self.dataname + "_formschema"] || [];
               for (var index in fields) {
@@ -173,7 +169,7 @@
               callback(self.ca);
             });
           } else {
-            if(ca.getFirebase()){
+            if(ca.firebase){
               callback(ca);
             } else {
               //ceci-app available but firebase not up yet
@@ -185,7 +181,6 @@
           }
         },
         updateSchema : function(){
-          console.log("updateSchema");
           //Check what inputs there are, and build a schema file of them,
           // so that when the component loads next time, it builds out the correct form
 
@@ -261,7 +256,6 @@
                 that.resetForm();
               }
 
-              //localStorage.setItem("db",JSON.stringify(db));
               var ca = document.querySelector("ceci-app")
               ca.setFirebaseObject('form-data', addTo);
               //Stoage event!
