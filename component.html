@@ -49,6 +49,7 @@
         ready: function(){
           this.super();
           this.datascope = [];
+          this.initialBuildForm = false;
           this.buildForm();
         },
         toggleInputMenu: function(){
@@ -76,6 +77,8 @@
           }
         },
         datanameChanged : function(){
+          //handle the case where the dataname is in the process of changing or has changed
+          //but doesn't have any input forms yet, so nothing needs to be saved
           this.updateSchema();
         },
         resetForm: function(){
@@ -151,6 +154,8 @@
                   self._addInputInit(field["type"],field["name"]);
                 }
               }
+
+              self.initialBuildForm = true;
             });
           });
         },
@@ -175,30 +180,29 @@
           }
         },
         updateSchema : function(){
-          //Check what inputs there are, and build a schema file of them,
-          // so that when the component loads next time, it builds out the correct form
+          if(this.initialBuildForm){
+            //Check what inputs there are, and build a schema file of them,
+            // so that when the component loads next time, it builds out the correct form
+            var schema = [];
 
-          var schema = [];
-
-          //Builds a schema file based on the fields in the form,
-          // should be triggered on load and on add / remove of fields
-          var fields = this.shadowRoot.querySelectorAll(".form input");
-          for (var field in fields) {
-            if (fields.hasOwnProperty(field)) {
-              var fieldSchema = {}
-              var f = fields[field];
-              var name = f.getAttribute("storeName");
-              var type = f.getAttribute("type");
-              fieldSchema["name"] = name;
-              fieldSchema["type"] = type;
-              schema.push(fieldSchema);
+            //Builds a schema file based on the fields in the form,
+            // should be triggered on load and on add / remove of fields
+            var fields = this.shadowRoot.querySelectorAll(".form input");
+            for (var field in fields) {
+              if (fields.hasOwnProperty(field)) {
+                var fieldSchema = {}
+                var f = fields[field];
+                var name = f.getAttribute("storeName");
+                var type = f.getAttribute("type");
+                fieldSchema["name"] = name;
+                fieldSchema["type"] = type;
+                schema.push(fieldSchema);
+              }
             }
-          }
 
-          // Builds new schema
-          var keyname = this.dataname + "_formschema";
+            // Builds new schema
+            var keyname = this.dataname + "_formschema";
 
-          if(schema && schema.length > 0){
             this._checkFirebase(function(ca){
               var db = {};
               db[keyname] = schema;
