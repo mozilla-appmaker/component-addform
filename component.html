@@ -80,7 +80,7 @@
         },
         addInputClick : function(e){
           var type = e.target.getAttribute("type");
-          var inputName = window.prompt("Name this input");
+          var inputName = window.prompt(this.gettext(this.localName + "/Name this input") || "Name this input");
           if(inputName){
             this.addInput(type,inputName);
           }
