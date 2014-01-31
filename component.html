@@ -49,6 +49,11 @@
         ready: function(){
           this.super();
           this.datascope = [];
+          var self = this;
+          window.addEventListener("CeciAppSaveAs", function(){
+            self.saveData();
+          });
+
           this.initialBuildForm = false;
           this.buildForm();
         },
