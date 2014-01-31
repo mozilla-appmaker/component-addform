@@ -3,11 +3,11 @@
     <link rel="stylesheet" href="component.css">
     <!-- <div id="datascope"></div> -->
     <div id="add-input-view" show="no">
-      <h2 on-click="{{toggleInputMenu}}">+ Add Inputs</h2>
+      <h2 on-click="{{toggleInputMenu}}" id="addInputs">+ Add Inputs</h2>
       <div on-click="{{addInputClick}}" class="input-types">
-        <div class="input-type" type="text">Text Input</div>
-        <div class="input-type" type="checkbox">Checkbox</div>
-        <div class="input-type" type="range">Slider</div>
+        <div class="input-type" type="text" id="textInput">Text Input</div>
+        <div class="input-type" type="checkbox" id="checkbox">Checkbox</div>
+        <div class="input-type" type="range" id="slider">Slider</div>
       </div>
     </div>
     <div id="form-wrapper" class="form"></div>
@@ -54,6 +54,10 @@
             self.saveData();
           });
 
+          this.$.addInputs.innerHTML = this.gettext(this.localName + "/addInputs") || this.$.addInputs.innerHTML;
+          this.$.textInput.innerHTML = this.gettext(this.localName + "/textInput") || this.$.textInput.innerHTML;
+          this.$.checkbox.innerHTML = this.gettext(this.localName + "/checkbox") || this.$.checkbox.innerHTML;
+          this.$.slider.innerHTML = this.gettext(this.localName + "/slider") || this.$.slider.innerHTML;
           this.initialBuildForm = false;
           this.buildForm();
         },

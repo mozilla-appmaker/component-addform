@@ -1,5 +1,9 @@
 {
 	"ceci-addform": "Add Form",
+	"ceci-addform/addInputs": "+ Add Inputs",
+	"ceci-addform/textInput": "Text Input",
+	"ceci-addform/checkbox": "Checkbox",
+	"ceci-addform/slider": "Slider",
 	"ceci-addform/description": "Create forms and save data to a database.",
 	"ceci-addform/attributes/dataname": "Items",
 	"ceci-addform/attributes/dataname/label": "I create...",
