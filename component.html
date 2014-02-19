@@ -3,7 +3,7 @@
     <link rel="stylesheet" href="component.css">
     <!-- <div id="datascope"></div> -->
     <div id="add-input-view" show="no">
-      <h2 on-click="{{toggleInputMenu}}" id="addInputs">+ Add Inputs</h2>
+      <h2 on-click="{{toggleInputMenu}}" id="addInputs">+ Add Inputs, Yo</h2>
       <div on-click="{{addInputClick}}" class="input-types">
         <div class="input-type" type="text" id="textInput">Text Input</div>
         <div class="input-type" type="checkbox" id="checkbox">Checkbox</div>
@@ -50,6 +50,7 @@
           this.super();
           this.datascope = [];
           var self = this;
+
           window.addEventListener("CeciAppSaveAs", function(){
             self.saveData();
           });
@@ -213,13 +214,24 @@
             var keyname = this.dataname + "_formschema";
 
             this._checkFirebase(function(ca){
-              var db = {};
-              db[keyname] = schema;
-              ca.setFirebaseObject('form-data', db);
+              var that = self;
+
+              ca.getFirebaseObject('form-data',"", function(data){
+                var db = data || {};
+                db[keyname] = schema;
+
+                var ca = document.querySelector("ceci-app")
+                ca.setFirebaseObject('form-data', db);
+
+                //Stoage event!
+                var event = new CustomEvent("storage");
+                window.dispatchEvent(event);
+              });
+
               // Event! So that data view components know when the schema has changed.
               // Right now the schema depends only on the form inputs?
-              var event = new CustomEvent("formChange");
-              window.dispatchEvent(event);
+              // var event = new CustomEvent("formChange");
+              // window.dispatchEvent(event);
             });
           }
         },
@@ -235,6 +247,7 @@
               for (var i = 0; i < that.datascope.length; i++){
                 var scopeItem = that.datascope[i];
                 addTo = addTo[scopeItem["dataset"]][scopeItem["index"]];
+
               }
 
               if (addTo[that.dataname] === undefined){
@@ -264,7 +277,7 @@
               }
 
               var ca = document.querySelector("ceci-app")
-              ca.setFirebaseObject('form-data', addTo);
+              ca.setFirebaseObject('form-data', db);
               //Stoage event!
               var event = new CustomEvent("storage");
               window.dispatchEvent(event);
