@@ -1,7 +1,7 @@
-<polymer-element name="ceci-addform" attributes="resetonsubmit dataname datascope" dataname="Items" extends="ceci-element">
+<polymer-element name="ceci-addform" attributes="resetonsubmit validatecontent dataname datascope" dataname="Items" extends="ceci-element">
   <template>
     <link rel="stylesheet" href="component.css">
-    <!-- <div id="datascope"></div> -->
+    <div id="datascope"></div>
     <div id="add-input-view" show="no">
       <h2 on-click="{{toggleInputMenu}}" id="addInputs">+ Add Inputs</h2>
       <div on-click="{{addInputClick}}" class="input-types">
@@ -39,6 +39,11 @@
             "description": "Clear the form fields after submitting",
             "label": "Reset fields on submit",
             "editable": "boolean"
+          },
+          "validatecontent": {
+            "description": "Prevents the form from submitting without data",
+            "label": "Prevent submitting empty form",
+            "editable": "boolean"
           }
         }
       }
@@ -50,11 +55,9 @@
           this.super();
           this.datascope = [];
           var self = this;
-
           window.addEventListener("CeciAppSaveAs", function(){
             self.saveData();
           });
-
           this.$.addInputs.innerHTML = this.gettext(this.localName + "/addInputs") || this.$.addInputs.innerHTML;
           this.$.textInput.innerHTML = this.gettext(this.localName + "/textInput") || this.$.textInput.innerHTML;
           this.$.checkbox.innerHTML = this.gettext(this.localName + "/checkbox") || this.$.checkbox.innerHTML;
@@ -76,8 +79,18 @@
           this.datascope = e;
         },
         datascopeChanged : function(){
-          //If we want some indicator on the form for where the data is being added to, this is where we'd do it.
-          // var scopeEl = this.shadowRoot.querySelector("#datascope");
+          var scopeEl = this.shadowRoot.querySelector("#datascope");
+          var scopeString = "Adding to ";
+          if(this.datascope.length > 0) {
+            scopeEl.style.display = "block";
+            for(var i = 0; i < this.datascope.length; i++) {
+              scopeString = scopeString + this.datascope[i].dataset;
+            }
+            // scopeEl.innerHTML = scopeString;
+          } else {
+            scopeEl.style.display = "none";
+          }
+          scopeEl.style.display = "none";
         },
         addInputClick : function(e){
           var type = e.target.getAttribute("type");
@@ -236,6 +249,8 @@
         },
         saveData : function(){
           var self = this;
+          var hasData = true;
+
           this._checkFirebase(function(ca){
             var that = self;
             ca.getFirebaseObject('form-data',"", function(data){
@@ -246,7 +261,6 @@
               for (var i = 0; i < that.datascope.length; i++){
                 var scopeItem = that.datascope[i];
                 addTo = addTo[scopeItem["dataset"]][scopeItem["index"]];
-
               }
 
               if (addTo[that.dataname] === undefined){
@@ -264,6 +278,9 @@
                     var value = f.checked;
                   } else {
                     var value = f.value;
+                    if(value == ""){
+                      hasData = false;
+                    }
                   }
                   newData[name] = value;
                 }
@@ -275,11 +292,17 @@
                 that.resetForm();
               }
 
-              var ca = document.querySelector("ceci-app")
-              ca.setFirebaseObject('form-data', db);
-              //Stoage event!
-              var event = new CustomEvent("storage");
-              window.dispatchEvent(event);
+              if(that.validatecontent == "true" && hasData == false) {
+
+                //Don't submit if
+              } else {
+                var ca = document.querySelector("ceci-app")
+                ca.setFirebaseObject('form-data', db);
+                //Stoage event!
+                var event = new CustomEvent("storage");
+                window.dispatchEvent(event);
+              }
+
             });
           });
         }
