@@ -3,7 +3,7 @@
     <link rel="stylesheet" href="component.css">
     <!-- <div id="datascope"></div> -->
     <div id="add-input-view" show="no">
-      <h2 on-click="{{toggleInputMenu}}" id="addInputs">+ Add Inputs, Yo</h2>
+      <h2 on-click="{{toggleInputMenu}}" id="addInputs">+ Add Inputs</h2>
       <div on-click="{{addInputClick}}" class="input-types">
         <div class="input-type" type="text" id="textInput">Text Input</div>
         <div class="input-type" type="checkbox" id="checkbox">Checkbox</div>
@@ -117,7 +117,7 @@
           deleteLink.classList.add("delete-item");
           deleteLink.setAttribute("on-click","{{deleteMe}}");
           deleteLink.addEventListener("click",function(e){
-              self.deleteItem(e);
+            self.deleteItem(e);
           });
 
           wrapper.appendChild(deleteLink);
@@ -143,7 +143,6 @@
           var formWrapper = this.shadowRoot.querySelector("#form-wrapper");
           this.super();
         },
-
         deleteItem : function(e){
           var item = e.target.parentNode;
           item.parentNode.removeChild(item);
