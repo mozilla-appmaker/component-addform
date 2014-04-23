@@ -115,7 +115,7 @@
       },
       _addInputInit: function(type,inputName){
         var self = this;
-        window.CeciData.collections[ 0 ].model.push({name: inputName, type: type});
+        window.CeciData.collections[this.collectionIndex].model.push({name: inputName, type: type});
         var wrapper = document.createElement("div");
         wrapper.classList.add("input-wrapper");
 
@@ -170,8 +170,9 @@
           model: [],
           data: []
         });
-        dataManager.currentCollectionIndex = window.CeciData.collections.length-1;
-        dataManager.currentCollection = dataManager.collections[dataManager.currentCollectionIndex];
+        this.collectionIndex = window.CeciData.collections.length-1;
+        dataManager.currentCollectionIndex = this.collectionIndex;
+        dataManager.currentCollection = dataManager.collections[this.collectionIndex];
         this._checkFirebase(function(ceciApp){
           ceciApp.getFirebaseObject('form-data',"", function(data){
             var db = data || {};
@@ -253,6 +254,9 @@
           });
         }
       },
+      datanameChanged: function() {
+        window.CeciData.collections[this.collectionIndex].name = this.dataname;
+      },
       saveData : function(){
         var self = this;
         var hasData = true;
@@ -289,7 +293,7 @@
                   }
                 }
                 newData[name] = value;
-                window.CeciData.collections[0].data.push(newData);
+                window.CeciData.collections[that.collectionIndex].data.push(newData);
               }
             }
 
