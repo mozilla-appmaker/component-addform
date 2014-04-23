@@ -34,7 +34,8 @@
         "dataname": {
           "description": "This form will create this item, ie.. 'Cats'",
           "label": "I create...",
-          "editable": "text"
+          "editable": "text",
+          "listener": true
         },
         "resetonsubmit": {
           "description": "Clear the form fields after submitting",
@@ -62,7 +63,6 @@
         this.$.textInput.innerHTML = this.gettext(this.localName + "/textInput") || this.$.textInput.innerHTML;
         this.$.checkbox.innerHTML = this.gettext(this.localName + "/checkbox") || this.$.checkbox.innerHTML;
         this.$.slider.innerHTML = this.gettext(this.localName + "/slider") || this.$.slider.innerHTML;
-        this.initialBuildForm = false;
         this.buildForm();
       },
       toggleInputMenu: function(){
@@ -99,11 +99,6 @@
           this.addInput(type,inputName);
         }
       },
-      datanameChanged : function(){
-        //handle the case where the dataname is in the process of changing or has changed
-        //but doesn't have any input forms yet, so nothing needs to be saved
-        this.updateSchema();
-      },
       resetForm: function(){
         var fields = this.shadowRoot.querySelectorAll(".form input");
         for (var field in fields) {
@@ -115,7 +110,6 @@
       },
       _addInputInit: function(type,inputName){
         var self = this;
-        window.CeciData.collections[this.collectionIndex].model.push({name: inputName, type: type});
         var wrapper = document.createElement("div");
         wrapper.classList.add("input-wrapper");
 
@@ -130,7 +124,7 @@
         deleteLink.classList.add("delete-item");
         deleteLink.setAttribute("on-click","{{deleteMe}}");
         deleteLink.addEventListener("click",function(e){
-          self.deleteItem(e);
+          self.deleteItem(type,inputName);
         });
 
         wrapper.appendChild(deleteLink);
@@ -149,17 +143,24 @@
         this.shadowRoot.querySelector("#form-wrapper").appendChild(wrapper);
       },
       addInput: function(type,inputName){
-        this._addInputInit(type,inputName);
-        this.updateSchema();
+        window.CeciData.collections[this.collectionIndex].model.push({name: inputName, type: type});
       },
       enteredView : function(){
         var formWrapper = this.shadowRoot.querySelector("#form-wrapper");
         this.super();
       },
-      deleteItem : function(e){
-        var item = e.target.parentNode;
+      _deleteItem: function(type,inputName){
+        var item = this.shadowRoot.querySelector("#form-wrapper").querySelector("input[storeName='" + inputName + "']").parentNode;
         item.parentNode.removeChild(item);
-        this.updateSchema();
+      },
+      deleteItem : function(type,inputName){
+        var model = window.CeciData.collections[this.collectionIndex].model;
+        for (var i = 0; i < model.length; i++) {
+          if (model[i].name === inputName && model[i].type === type ) {
+            model.splice(i, 1);
+            return;
+          }
+        }
       },
       buildForm: function(){
         //Builds out the remembered form fields
@@ -173,149 +174,66 @@
         this.collectionIndex = window.CeciData.collections.length-1;
         dataManager.currentCollectionIndex = this.collectionIndex;
         dataManager.currentCollection = dataManager.collections[this.collectionIndex];
-        this._checkFirebase(function(ceciApp){
-          ceciApp.getFirebaseObject('form-data',"", function(data){
-            var db = data || {};
-
-            var fields = db[self.dataname + "_formschema"] || [];
-            for (var index in fields) {
-              if (fields.hasOwnProperty(index)) {
-                var field = fields[index];
-                self._addInputInit(field["type"],field["name"]);
-              }
+        var observer = new ObjectObserver(window.CeciData.collections[this.collectionIndex]);
+        observer.open(function(added, removed, changed, getOldValueFn) {
+          self.dataname = window.CeciData.collections[self.collectionIndex].name;
+          // need to figure out how to update the editor... for some reason it is not
+        });
+        observer = new ArrayObserver(window.CeciData.collections[this.collectionIndex].model);
+        observer.open(function(splices) {
+          splices.forEach(function(splice) {
+            if (splice.addedCount) {
+              var item = window.CeciData.collections[self.collectionIndex].model[splice.index];
+              self._addInputInit(item.type, item.name);
+            } else {
+              splice.removed.forEach(function(remove) {
+                self._deleteItem(remove.type, remove.name);
+              });
             }
-            self.initialBuildForm = true;
           });
         });
-      },
-      _checkFirebase: function(callback){
-        var ca = document.querySelector("ceci-app");
-        if(!ca){
-          var self = this;
-          window.addEventListener("CeciDataConnectionLoaded", function(e){
-            self.ca = document.querySelector("ceci-app");
-            callback(self.ca);
-          });
-        } else {
-          if(ca.firebase){
-            callback(ca);
-          } else {
-            //ceci-app available but firebase not up yet
-            window.addEventListener("CeciDataConnectionLoaded", function(e){
-              var ca = document.querySelector("ceci-app");
-              callback(ca);
-            });
-          }
-        }
-      },
-      updateSchema : function(){
-        if(this.initialBuildForm){
-          //Check what inputs there are, and build a schema file of them,
-          // so that when the component loads next time, it builds out the correct form
-          var schema = [];
-
-          //Builds a schema file based on the fields in the form,
-          // should be triggered on load and on add / remove of fields
-          var fields = this.shadowRoot.querySelectorAll(".form input");
-          for (var field in fields) {
-            if (fields.hasOwnProperty(field)) {
-              var fieldSchema = {}
-              var f = fields[field];
-              var name = f.getAttribute("storeName");
-              var type = f.getAttribute("type");
-              fieldSchema["name"] = name;
-              fieldSchema["type"] = type;
-              schema.push(fieldSchema);
-            }
-          }
-
-          // Builds new schema
-          var keyname = this.dataname + "_formschema";
-
-          this._checkFirebase(function(ca){
-            var that = self;
-
-            ca.getFirebaseObject('form-data',"", function(data){
-              var db = data || {};
-              db[keyname] = schema;
-
-              var ca = document.querySelector("ceci-app")
-              ca.setFirebaseObject('form-data', db);
-
-              //Stoage event!
-              var event = new CustomEvent("storage");
-              window.dispatchEvent(event);
-            });
-
-            // Event! So that data view components know when the schema has changed.
-            // Right now the schema depends only on the form inputs?
-            // var event = new CustomEvent("formChange");
-            // window.dispatchEvent(event);
-          });
-        }
       },
       datanameChanged: function() {
-        window.CeciData.collections[this.collectionIndex].name = this.dataname;
+        if (window.CeciData.collections[this.collectionIndex].name !== this.dataname) {
+          window.CeciData.collections[this.collectionIndex].name = this.dataname;
+        }
       },
       saveData : function(){
-        var self = this;
+        var newData = {};
         var hasData = true;
+        var fields = this.shadowRoot.querySelectorAll(".form input");
 
-        this._checkFirebase(function(ca){
-          var that = self;
-          ca.getFirebaseObject('form-data',"", function(data){
-            var db = data || {};
-
-            var addTo = db;
-
-            for (var i = 0; i < that.datascope.length; i++){
-              var scopeItem = that.datascope[i];
-              addTo = addTo[scopeItem["dataset"]][scopeItem["index"]];
-            }
-
-            if (addTo[that.dataname] === undefined){
-              addTo[that.dataname] = [];
-            }
-
-            var newData = {};
-            var fields = that.shadowRoot.querySelectorAll(".form input");
-
-            for (var field in fields) {
-              if (fields.hasOwnProperty(field)) {
-                var f = fields[field];
-                var name = f.getAttribute("storeName");
-                if(f.getAttribute("type") == "checkbox"){
-                  var value = f.checked;
-                } else {
-                  var value = f.value;
-                  if(value == ""){
-                    hasData = false;
-                  }
-                }
-                newData[name] = value;
+        for (var field in fields) {
+          if (fields.hasOwnProperty(field)) {
+            var f = fields[field];
+            var name = f.getAttribute("storeName");
+            if(f.getAttribute("type") == "checkbox"){
+              var value = f.checked;
+            } else {
+              var value = f.value;
+              if(value == ""){
+                hasData = false;
               }
             }
+            newData[name] = value;
+          }
+        }
 
-            window.CeciData.collections[that.collectionIndex].data.push(newData);
-            addTo[that.dataname].push(newData);
+        window.CeciData.collections[this.collectionIndex].data.push(newData);
 
-            if(that.resetonsubmit == "true"){
-              that.resetForm();
-            }
+        if(this.resetonsubmit == "true"){
+          this.resetForm();
+        }
 
-            if(that.validatecontent == "true" && hasData == false) {
+        if(this.validatecontent == "true" && hasData == false) {
 
-              //Don't submit if
-            } else {
-              var ca = document.querySelector("ceci-app")
-              ca.setFirebaseObject('form-data', db);
-              //Stoage event!
-              var event = new CustomEvent("storage");
-              window.dispatchEvent(event);
-            }
-
-          });
-        });
+          //Don't submit if
+        } else {
+          var ca = document.querySelector("ceci-app");
+          //Stoage event!
+          var event = new CustomEvent("storage");
+          window.dispatchEvent(event);
+        }
       }
     });
   </script>
