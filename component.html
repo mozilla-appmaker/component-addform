@@ -115,7 +115,7 @@
       },
       _addInputInit: function(type,inputName){
         var self = this;
-
+        window.CeciData.collections[ 0 ].model.push({name: inputName, type: type});
         var wrapper = document.createElement("div");
         wrapper.classList.add("input-wrapper");
 
@@ -164,7 +164,14 @@
       buildForm: function(){
         //Builds out the remembered form fields
         var self = this;
-
+        var dataManager = document.querySelector("data-manager");
+        window.CeciData.collections.push({
+          name: self.dataname,
+          model: [],
+          data: []
+        });
+        dataManager.currentCollectionIndex = window.CeciData.collections.length-1;
+        dataManager.currentCollection = dataManager.collections[dataManager.currentCollectionIndex];
         this._checkFirebase(function(ceciApp){
           ceciApp.getFirebaseObject('form-data',"", function(data){
             var db = data || {};
@@ -176,7 +183,6 @@
                 self._addInputInit(field["type"],field["name"]);
               }
             }
-
             self.initialBuildForm = true;
           });
         });
@@ -283,6 +289,7 @@
                   }
                 }
                 newData[name] = value;
+                window.CeciData.collections[0].data.push(newData);
               }
             }
 
