@@ -124,33 +124,36 @@
         deleteLink.classList.add("delete-item");
         deleteLink.setAttribute("on-click","{{deleteMe}}");
         deleteLink.addEventListener("click",function(e){
-          self.deleteItem(type,inputName);
+          // The input name could have changed.
+          self.deleteItem(type,input.getAttribute("storeName"));
         });
 
         wrapper.appendChild(deleteLink);
 
         if(type=="checkbox"){
-            var labelWrapper = document.createElement("span");
-            labelWrapper.innerHTML = inputName;
-            label.appendChild(input);
-            label.appendChild(labelWrapper);
-            wrapper.appendChild(label);
+          var labelWrapper = document.createElement("span");
+          labelWrapper.innerHTML = inputName;
+          label.appendChild(input);
+          label.appendChild(labelWrapper);
+          wrapper.appendChild(label);
         } else {
-            label.innerHTML = inputName;
-            wrapper.appendChild(label);
-            wrapper.appendChild(input);
+          label.innerHTML = inputName;
+          wrapper.appendChild(label);
+          wrapper.appendChild(input);
         }
         this.shadowRoot.querySelector("#form-wrapper").appendChild(wrapper);
       },
       addInput: function(type,inputName){
-        window.CeciData.collections[this.collectionIndex].model.push({name: inputName, type: type});
+        var data = {name: inputName, type: type};
+        window.CeciData.collections[this.collectionIndex].model.push(data);
       },
       enteredView : function(){
         var formWrapper = this.shadowRoot.querySelector("#form-wrapper");
         this.super();
       },
       _deleteItem: function(type,inputName){
-        var item = this.shadowRoot.querySelector("#form-wrapper").querySelector("input[storeName='" + inputName + "']").parentNode;
+        var formWrapper = this.shadowRoot.querySelector("#form-wrapper");
+        var item = formWrapper.querySelector("input[storeName='" + inputName + "']").parentNode;
         item.parentNode.removeChild(item);
       },
       deleteItem : function(type,inputName){
@@ -163,27 +166,41 @@
         }
       },
       buildForm: function(){
-        //Builds out the remembered form fields
+        // Builds out the remembered form fields
         var self = this;
         var dataManager = document.querySelector("data-manager");
-        window.CeciData.collections.push({
+        var formData = {
           name: self.dataname,
           model: [],
           data: []
-        });
+        };
+        window.CeciData.collections.push(formData);
         this.collectionIndex = window.CeciData.collections.length-1;
         dataManager.currentCollectionIndex = this.collectionIndex;
         dataManager.currentCollection = dataManager.collections[this.collectionIndex];
-        var observer = new ObjectObserver(window.CeciData.collections[this.collectionIndex]);
-        observer.open(function(added, removed, changed, getOldValueFn) {
-          self.dataname = window.CeciData.collections[self.collectionIndex].name;
+        // An observer for when the collection name changes.
+        new ObjectObserver(formData).open(function(added, removed, changed, getOldValueFn) {
+          self.dataname = formData.name;
           // need to figure out how to update the editor... for some reason it is not
         });
-        observer = new ArrayObserver(window.CeciData.collections[this.collectionIndex].model);
-        observer.open(function(splices) {
+        // An observer for when new fields are added to the collection's model.
+        new ArrayObserver(formData.model).open(function(splices) {
           splices.forEach(function(splice) {
             if (splice.addedCount) {
-              var item = window.CeciData.collections[self.collectionIndex].model[splice.index];
+              var item = formData.model[splice.index];
+              // An observer for when a model field's name changes.
+              new ObjectObserver(item).open(function(added, removed, changed, getOldValueFn) {
+                // We need to find the label and input based on the old value,
+                // then update it to the new value.
+                var oldValue = getOldValueFn("name");
+                if (changed.name && oldValue) {
+                  var formWrapper = self.shadowRoot.querySelector("#form-wrapper");
+                  var input = formWrapper.querySelector("input[storeName='" + oldValue + "']");
+                  var label = input.parentNode.querySelector("label");
+                  label.innerHTML = changed.name;
+                  input.setAttribute("storeName",changed.name);
+                }
+              });
               self._addInputInit(item.type, item.name);
             } else {
               splice.removed.forEach(function(remove) {
