@@ -51,202 +51,204 @@
     }
   </ceci-definition>
   <script>
-    Polymer("ceci-addform", {
-      ready: function(){
-        this.super();
-        this.datascope = [];
-        var self = this;
-        window.addEventListener("CeciAppSaveAs", function(){
-          self.saveData();
-        });
-        this.$.addInputs.innerHTML = this.gettext(this.localName + "/addInputs") || this.$.addInputs.innerHTML;
-        this.$.textInput.innerHTML = this.gettext(this.localName + "/textInput") || this.$.textInput.innerHTML;
-        this.$.checkbox.innerHTML = this.gettext(this.localName + "/checkbox") || this.$.checkbox.innerHTML;
-        this.$.slider.innerHTML = this.gettext(this.localName + "/slider") || this.$.slider.innerHTML;
-        this.buildForm();
-      },
-      toggleInputMenu: function(){
-        //Toggles the menu at the top of the form used for adding iputs
-        var menu = this.shadowRoot.querySelector("#add-input-view");
-        var state = menu.getAttribute("show");
-        if(state == "yes") {
-          menu.setAttribute("show","no");
-        } else {
-          menu.setAttribute("show","yes");
-        }
-      },
-      setScope : function(e){
-        this.datascope = e;
-      },
-      datascopeChanged : function(){
-        var scopeEl = this.shadowRoot.querySelector("#datascope");
-        var scopeString = "Adding to ";
-        if(this.datascope.length > 0) {
-          scopeEl.style.display = "block";
-          for(var i = 0; i < this.datascope.length; i++) {
-            scopeString = scopeString + this.datascope[i].dataset;
+    require(['data-manager'], function(dataManager) {
+      Polymer("ceci-addform", {
+        ready: function(){
+          this.super();
+          this.datascope = [];
+          var self = this;
+          window.addEventListener("CeciAppSaveAs", function(){
+            self.saveData();
+          });
+          this.$.addInputs.innerHTML = this.gettext(this.localName + "/addInputs") || this.$.addInputs.innerHTML;
+          this.$.textInput.innerHTML = this.gettext(this.localName + "/textInput") || this.$.textInput.innerHTML;
+          this.$.checkbox.innerHTML = this.gettext(this.localName + "/checkbox") || this.$.checkbox.innerHTML;
+          this.$.slider.innerHTML = this.gettext(this.localName + "/slider") || this.$.slider.innerHTML;
+          this.buildForm();
+        },
+        toggleInputMenu: function(){
+          //Toggles the menu at the top of the form used for adding iputs
+          var menu = this.shadowRoot.querySelector("#add-input-view");
+          var state = menu.getAttribute("show");
+          if(state == "yes") {
+            menu.setAttribute("show","no");
+          } else {
+            menu.setAttribute("show","yes");
           }
-          // scopeEl.innerHTML = scopeString;
-        } else {
-          scopeEl.style.display = "none";
-        }
-        scopeEl.style.display = "none";
-      },
-      addInputClick : function(e){
-        var type = e.target.getAttribute("type");
-        var inputName = window.prompt(this.gettext(this.localName + "/Name this input") || "Name this input");
-        if(inputName){
-          this.addInput(type,inputName);
-        }
-      },
-      resetForm: function(){
-        var fields = this.shadowRoot.querySelectorAll(".form input");
-        for (var field in fields) {
-          if (fields.hasOwnProperty(field)) {
-            var f = fields[field];
-            f.value = "";
-          }
-        }
-      },
-      _addInputInit: function(type,inputName){
-        var self = this;
-        var wrapper = document.createElement("div");
-        wrapper.classList.add("input-wrapper");
-
-        var input = document.createElement("input");
-        input.setAttribute("type",type);
-        input.setAttribute("storeName",inputName);
-
-        var label = document.createElement("label");
-
-        var deleteLink = document.createElement("div");
-        deleteLink.textContent = "X";
-        deleteLink.classList.add("delete-item");
-        deleteLink.setAttribute("on-click","{{deleteMe}}");
-        deleteLink.addEventListener("click",function(e){
-          // The input name could have changed.
-          self.deleteItem(type,input.getAttribute("storeName"));
-        });
-
-        wrapper.appendChild(deleteLink);
-
-        if(type=="checkbox"){
-          var labelWrapper = document.createElement("span");
-          labelWrapper.textContent = inputName;
-          label.appendChild(input);
-          label.appendChild(labelWrapper);
-          wrapper.appendChild(label);
-        } else {
-          label.textContent = inputName;
-          wrapper.appendChild(label);
-          wrapper.appendChild(input);
-        }
-        this.shadowRoot.querySelector("#form-wrapper").appendChild(wrapper);
-      },
-      addInput: function(type,inputName){
-        var data = {name: inputName, type: type};
-        window.CeciData.collections[this.collectionIndex].model.push(data);
-      },
-      enteredView : function(){
-        var formWrapper = this.shadowRoot.querySelector("#form-wrapper");
-        this.super();
-      },
-      _deleteItem: function(type,inputName){
-        var formWrapper = this.shadowRoot.querySelector("#form-wrapper");
-        var item = formWrapper.querySelector("input[storeName='" + inputName + "']").parentNode;
-        item.parentNode.removeChild(item);
-      },
-      deleteItem : function(type,inputName){
-        var model = window.CeciData.collections[this.collectionIndex].model;
-        for (var i = 0; i < model.length; i++) {
-          if (model[i].name === inputName && model[i].type === type ) {
-            model.splice(i, 1);
-            return;
-          }
-        }
-      },
-      buildForm: function(){
-        // Builds out the remembered form fields
-        var self = this;
-        var dataManager = document.querySelector("data-manager");
-        var formData = {
-          name: self.dataname,
-          model: [],
-          data: []
-        };
-        dataManager.addEventListener("dataCollectionAdded", function(e) {
-          var collection = e.detail.collection;
-          // Nothing to do here right now
-        });
-        dataManager.addEventListener("dataFieldAdded", function(e) {
-          var field = e.detail.field;
-          self._addInputInit(field.type, field.name);
-        });
-        dataManager.addEventListener("dataFieldRemoved", function(e) {
-          var field = e.detail.field;
-          self._deleteItem(field.type, field.name);
-        });
-        dataManager.addEventListener("dataFieldNameChanged", function(e) {
-          var name = e.detail.name;
-          var oldName = e.detail.oldName;
-          var formWrapper = self.shadowRoot.querySelector("#form-wrapper");
-          var input = formWrapper.querySelector("input[storeName='" + oldName + "']");
-          var label = input.parentNode.querySelector("label");
-          label.textContent = name;
-          input.setAttribute("storeName",name);
-        });
-        window.CeciData.collections.push(formData);
-        this.collectionIndex = window.CeciData.collections.length-1;
-        dataManager.currentCollectionIndex = this.collectionIndex;
-        dataManager.currentCollection = dataManager.collections[this.collectionIndex];
-        // An observer for when the collection name changes.
-        new ObjectObserver(formData).open(function(added, removed, changed, getOldValueFn) {
-          self.dataname = formData.name;
-          // need to figure out how to update the editor... for some reason it is not
-        });
-      },
-      datanameChanged: function() {
-        if (window.CeciData.collections[this.collectionIndex].name !== this.dataname) {
-          window.CeciData.collections[this.collectionIndex].name = this.dataname;
-        }
-      },
-      saveData : function(){
-        var newData = {};
-        var hasData = true;
-        var fields = this.shadowRoot.querySelectorAll(".form input");
-
-        for (var field in fields) {
-          if (fields.hasOwnProperty(field)) {
-            var f = fields[field];
-            var name = f.getAttribute("storeName");
-            if(f.getAttribute("type") == "checkbox"){
-              var value = f.checked;
-            } else {
-              var value = f.value;
-              if(value == ""){
-                hasData = false;
-              }
+        },
+        setScope : function(e){
+          this.datascope = e;
+        },
+        datascopeChanged : function(){
+          var scopeEl = this.shadowRoot.querySelector("#datascope");
+          var scopeString = "Adding to ";
+          if(this.datascope.length > 0) {
+            scopeEl.style.display = "block";
+            for(var i = 0; i < this.datascope.length; i++) {
+              scopeString = scopeString + this.datascope[i].dataset;
             }
-            newData[name] = value;
+            // scopeEl.innerHTML = scopeString;
+          } else {
+            scopeEl.style.display = "none";
+          }
+          scopeEl.style.display = "none";
+        },
+        addInputClick : function(e){
+          var type = e.target.getAttribute("type");
+          var inputName = window.prompt(this.gettext(this.localName + "/Name this input") || "Name this input");
+          if(inputName){
+            this.addInput(type,inputName);
+          }
+        },
+        resetForm: function(){
+          var fields = this.shadowRoot.querySelectorAll(".form input");
+          for (var field in fields) {
+            if (fields.hasOwnProperty(field)) {
+              var f = fields[field];
+              f.value = "";
+            }
+          }
+        },
+        _addInputInit: function(type,inputName){
+          var self = this;
+          var wrapper = document.createElement("div");
+          wrapper.classList.add("input-wrapper");
+
+          var input = document.createElement("input");
+          input.setAttribute("type",type);
+          input.setAttribute("storeName",inputName);
+
+          var label = document.createElement("label");
+
+          var deleteLink = document.createElement("div");
+          deleteLink.textContent = "X";
+          deleteLink.classList.add("delete-item");
+          deleteLink.setAttribute("on-click","{{deleteMe}}");
+          deleteLink.addEventListener("click",function(e){
+            // The input name could have changed.
+            self.deleteItem(type,input.getAttribute("storeName"));
+          });
+
+          wrapper.appendChild(deleteLink);
+
+          if(type=="checkbox"){
+            var labelWrapper = document.createElement("span");
+            labelWrapper.textContent = inputName;
+            label.appendChild(input);
+            label.appendChild(labelWrapper);
+            wrapper.appendChild(label);
+          } else {
+            label.textContent = inputName;
+            wrapper.appendChild(label);
+            wrapper.appendChild(input);
+          }
+          this.shadowRoot.querySelector("#form-wrapper").appendChild(wrapper);
+        },
+        addInput: function(type,inputName){
+          var data = {name: inputName, type: type};
+          window.CeciData.collections[this.collectionIndex].model.push(data);
+        },
+        enteredView : function(){
+          var formWrapper = this.shadowRoot.querySelector("#form-wrapper");
+          this.super();
+        },
+        _deleteItem: function(type,inputName){
+          var formWrapper = this.shadowRoot.querySelector("#form-wrapper");
+          var item = formWrapper.querySelector("input[storeName='" + inputName + "']").parentNode;
+          item.parentNode.removeChild(item);
+        },
+        deleteItem : function(type,inputName){
+          var model = window.CeciData.collections[this.collectionIndex].model;
+          for (var i = 0; i < model.length; i++) {
+            if (model[i].name === inputName && model[i].type === type ) {
+              model.splice(i, 1);
+              return;
+            }
+          }
+        },
+        buildForm: function(){
+          // Builds out the remembered form fields
+          var self = this;
+          //var dataManager = document.querySelector("data-manager");
+          var formData = {
+            name: self.dataname,
+            model: [],
+            data: []
+          };
+          dataManager.on("dataCollectionAdded", function(e) {
+            var collection = e.detail.collection;
+            // Nothing to do here right now
+          });
+          dataManager.on("dataFieldAdded", function(e) {
+            var field = e.detail.field;
+            self._addInputInit(field.type, field.name);
+          });
+          dataManager.on("dataFieldRemoved", function(e) {
+            var field = e.detail.field;
+            self._deleteItem(field.type, field.name);
+          });
+          dataManager.on("dataFieldNameChanged", function(e) {
+            var name = e.detail.name;
+            var oldName = e.detail.oldName;
+            var formWrapper = self.shadowRoot.querySelector("#form-wrapper");
+            var input = formWrapper.querySelector("input[storeName='" + oldName + "']");
+            var label = input.parentNode.querySelector("label");
+            label.textContent = name;
+            input.setAttribute("storeName",name);
+          });
+          window.CeciData.collections.push(formData);
+          this.collectionIndex = window.CeciData.collections.length-1;
+          //dataManager.currentCollectionIndex = this.collectionIndex;
+          //dataManager.currentCollection = dataManager.collections[this.collectionIndex];
+          // An observer for when the collection name changes.
+          new ObjectObserver(formData).open(function(added, removed, changed, getOldValueFn) {
+            self.dataname = formData.name;
+            // need to figure out how to update the editor... for some reason it is not
+          });
+        },
+        datanameChanged: function() {
+          if (window.CeciData.collections[this.collectionIndex].name !== this.dataname) {
+            window.CeciData.collections[this.collectionIndex].name = this.dataname;
+          }
+        },
+        saveData : function(){
+          var newData = {};
+          var hasData = true;
+          var fields = this.shadowRoot.querySelectorAll(".form input");
+
+          for (var field in fields) {
+            if (fields.hasOwnProperty(field)) {
+              var f = fields[field];
+              var name = f.getAttribute("storeName");
+              if(f.getAttribute("type") == "checkbox"){
+                var value = f.checked;
+              } else {
+                var value = f.value;
+                if(value == ""){
+                  hasData = false;
+                }
+              }
+              newData[name] = value;
+            }
+          }
+
+          window.CeciData.collections[this.collectionIndex].data.push(newData);
+
+          if(this.resetonsubmit == "true"){
+            this.resetForm();
+          }
+
+          if(this.validatecontent == "true" && hasData == false) {
+
+            //Don't submit if
+          } else {
+            var ca = document.querySelector("ceci-app");
+            //Stoage event!
+            var event = new CustomEvent("storage");
+            window.dispatchEvent(event);
           }
         }
-
-        window.CeciData.collections[this.collectionIndex].data.push(newData);
-
-        if(this.resetonsubmit == "true"){
-          this.resetForm();
-        }
-
-        if(this.validatecontent == "true" && hasData == false) {
-
-          //Don't submit if
-        } else {
-          var ca = document.querySelector("ceci-app");
-          //Stoage event!
-          var event = new CustomEvent("storage");
-          window.dispatchEvent(event);
-        }
-      }
+      });
     });
   </script>
 </polymer-element>
