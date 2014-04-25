@@ -177,6 +177,10 @@
           };
           dataManager.on("dataCollectionAdded", function(e) {
             var collection = e.detail.collection;
+// fake the data...
+self.addInput("text","yellow");
+self.addInput("text","green");
+self.addInput("text","blue");
             // Nothing to do here right now
           });
           dataManager.on("dataFieldAdded", function(e) {
