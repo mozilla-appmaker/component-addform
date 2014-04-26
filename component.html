@@ -58,13 +58,39 @@
           this.datascope = [];
           var self = this;
           window.addEventListener("CeciAppSaveAs", function(){
+            // I think we just want to save the form, not the data here.
+            // on submit, we want to save the data itself.
             self.saveData();
           });
           this.$.addInputs.innerHTML = this.gettext(this.localName + "/addInputs") || this.$.addInputs.innerHTML;
           this.$.textInput.innerHTML = this.gettext(this.localName + "/textInput") || this.$.textInput.innerHTML;
           this.$.checkbox.innerHTML = this.gettext(this.localName + "/checkbox") || this.$.checkbox.innerHTML;
           this.$.slider.innerHTML = this.gettext(this.localName + "/slider") || this.$.slider.innerHTML;
-          this.buildForm();
+          dataManager.on("dataCollectionAdded", function(e) {
+            var collection = e.detail.collection;
+            // Nothing to do here right now
+          });
+          dataManager.on("dataFieldAdded", function(e) {
+            var field = e.detail.field;
+            self._addInputInit(field.type, field.name);
+          });
+          dataManager.on("dataFieldRemoved", function(e) {
+            var field = e.detail.field;
+            self._deleteItem(field.type, field.name);
+          });
+          dataManager.on("dataFieldNameChanged", function(e) {
+            var name = e.detail.name;
+            var oldName = e.detail.oldName;
+            var formWrapper = self.shadowRoot.querySelector("#form-wrapper");
+            var input = formWrapper.querySelector("input[storeName='" + oldName + "']");
+            var label = input.parentNode.querySelector("label");
+            label.textContent = name;
+            input.setAttribute("storeName",name);
+          });
+          dataManager.on("dataCollectionReady", function(e) {
+            self.buildForm();
+          });
+          dataManager.initData();
         },
         toggleInputMenu: function(){
           //Toggles the menu at the top of the form used for adding iputs
@@ -146,7 +172,7 @@
         },
         addInput: function(type,inputName){
           var data = {name: inputName, type: type};
-          window.CeciData.collections[this.collectionIndex].model.push(data);
+          window.CeciData.collections[0].model.push(data);
         },
         enteredView : function(){
           var formWrapper = this.shadowRoot.querySelector("#form-wrapper");
@@ -158,7 +184,7 @@
           item.parentNode.removeChild(item);
         },
         deleteItem : function(type,inputName){
-          var model = window.CeciData.collections[this.collectionIndex].model;
+          var model = window.CeciData.collections[0].model;
           for (var i = 0; i < model.length; i++) {
             if (model[i].name === inputName && model[i].type === type ) {
               model.splice(i, 1);
@@ -167,53 +193,14 @@
           }
         },
         buildForm: function(){
-          // Builds out the remembered form fields
-          var self = this;
-          //var dataManager = document.querySelector("data-manager");
-          var formData = {
-            name: self.dataname,
-            model: [],
-            data: []
-          };
-          dataManager.on("dataCollectionAdded", function(e) {
-            var collection = e.detail.collection;
-// fake the data...
-self.addInput("text","yellow");
-self.addInput("text","green");
-self.addInput("text","blue");
-            // Nothing to do here right now
-          });
-          dataManager.on("dataFieldAdded", function(e) {
-            var field = e.detail.field;
-            self._addInputInit(field.type, field.name);
-          });
-          dataManager.on("dataFieldRemoved", function(e) {
-            var field = e.detail.field;
-            self._deleteItem(field.type, field.name);
-          });
-          dataManager.on("dataFieldNameChanged", function(e) {
-            var name = e.detail.name;
-            var oldName = e.detail.oldName;
-            var formWrapper = self.shadowRoot.querySelector("#form-wrapper");
-            var input = formWrapper.querySelector("input[storeName='" + oldName + "']");
-            var label = input.parentNode.querySelector("label");
-            label.textContent = name;
-            input.setAttribute("storeName",name);
-          });
-          window.CeciData.collections.push(formData);
-          this.collectionIndex = window.CeciData.collections.length-1;
-          //dataManager.currentCollectionIndex = this.collectionIndex;
-          //dataManager.currentCollection = dataManager.collections[this.collectionIndex];
-          // An observer for when the collection name changes.
-          new ObjectObserver(formData).open(function(added, removed, changed, getOldValueFn) {
-            self.dataname = formData.name;
-            // need to figure out how to update the editor... for some reason it is not
-          });
+          for (var i = 0; i < window.CeciData.collections[0].model.length; i++) {
+            this._addInputInit(window.CeciData.collections[0].model[i].type, window.CeciData.collections[0].model[i].name);
+          }
         },
         datanameChanged: function() {
-          if (window.CeciData.collections[this.collectionIndex].name !== this.dataname) {
-            window.CeciData.collections[this.collectionIndex].name = this.dataname;
-          }
+          //if (window.CeciData.collections[this.collectionIndex].name !== this.dataname) {
+          //  window.CeciData.collections[this.collectionIndex].name = this.dataname;
+          //}
         },
         saveData : function(){
           var newData = {};
@@ -236,7 +223,7 @@ self.addInput("text","blue");
             }
           }
 
-          window.CeciData.collections[this.collectionIndex].data.push(newData);
+          window.CeciData.collections[0].data.push(newData);
 
           if(this.resetonsubmit == "true"){
             this.resetForm();
@@ -248,6 +235,7 @@ self.addInput("text","blue");
           } else {
             var ca = document.querySelector("ceci-app");
             //Stoage event!
+            dataManager.saveData();
             var event = new CustomEvent("storage");
             window.dispatchEvent(event);
           }
