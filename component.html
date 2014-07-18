@@ -58,10 +58,10 @@
         window.addEventListener("CeciAppSaveAs", function(){
           self.saveData();
         });
-        this.$.addInputs.innerHTML = this.gettext(this.localName + "/addInputs") || this.$.addInputs.innerHTML;
-        this.$.textInput.innerHTML = this.gettext(this.localName + "/textInput") || this.$.textInput.innerHTML;
-        this.$.checkbox.innerHTML = this.gettext(this.localName + "/checkbox") || this.$.checkbox.innerHTML;
-        this.$.slider.innerHTML = this.gettext(this.localName + "/slider") || this.$.slider.innerHTML;
+        this.$.addInputs.textContent = this.gettext(this.localName + "/addInputs") || this.$.addInputs.textContent;
+        this.$.textInput.textContent = this.gettext(this.localName + "/textInput") || this.$.textInput.textContent;
+        this.$.checkbox.textContent = this.gettext(this.localName + "/checkbox") || this.$.checkbox.textContent;
+        this.$.slider.textContent = this.gettext(this.localName + "/slider") || this.$.slider.textContent;
         this.initialBuildForm = false;
         this.buildForm();
       },
@@ -86,7 +86,6 @@
           for(var i = 0; i < this.datascope.length; i++) {
             scopeString = scopeString + this.datascope[i].dataset;
           }
-          // scopeEl.innerHTML = scopeString;
         } else {
           scopeEl.style.display = "none";
         }
@@ -126,7 +125,7 @@
         var label = document.createElement("label");
 
         var deleteLink = document.createElement("div");
-        deleteLink.innerHTML = "X";
+        deleteLink.textContent = "X";
         deleteLink.classList.add("delete-item");
         deleteLink.setAttribute("on-click","{{deleteMe}}");
         deleteLink.addEventListener("click",function(e){
@@ -137,12 +136,12 @@
 
         if(type=="checkbox"){
             var labelWrapper = document.createElement("span");
-            labelWrapper.innerHTML = inputName;
+            labelWrapper.textContent = inputName;
             label.appendChild(input);
             label.appendChild(labelWrapper);
             wrapper.appendChild(label);
         } else {
-            label.innerHTML = inputName;
+            label.textContent = inputName;
             wrapper.appendChild(label);
             wrapper.appendChild(input);
         }
